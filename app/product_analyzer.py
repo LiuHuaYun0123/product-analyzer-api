@@ -39,7 +39,7 @@ def analyze_images_only(image_paths: list[str]) -> dict:
     ]
     
     my_file = []
-    my_file = client.files.upload(file=image_paths[0])  # 假设只分析第一张图片
+    # my_file = client.files.upload(file=image_paths[0])  # 假设只分析第一张图片
     for path in image_paths:
         try:
             my_file_object = client.files.upload(file=path)

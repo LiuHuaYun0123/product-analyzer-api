@@ -1,28 +1,33 @@
-# app/product_analyzer.py (极简版)
-
-import os
+from google import genai
+from google.genai import types
+from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 import json
 import re
-import google.generativeai as genai
 
 # API密钥配置保持不变
-API_KEY = "AIzaSyBeRAJv-EkYme20nOnmjYkSm9CnW5Z0mao" 
+API_KEY = "AIzaSyBeRAJv-EkYme20nOnmjYkSm9CnW5Z0mao"
 if not API_KEY or API_KEY == "YOUR_GEMINI_API_KEY_HERE":
     print("错误：请先设置您的Gemini API密钥。")
     exit()
-genai.configure(api_key=API_KEY)
+client = genai.Client(api_key=API_KEY)
+google_search_tool = Tool(
+    google_search = GoogleSearch()
+)
 
+my_generation_config = GenerateContentConfig(
+    temperature=0.0,
+    top_p=1.0,
+    top_k=32,
+    max_output_tokens=4096,
+    stop_sequences=['}'] # 这是一个可选的高级技巧
+)
 def analyze_images_only(image_paths: list[str]) -> dict:
     """
-    (极简版) 只调用Gemini分析图片，并返回结构化数据。
-    不再进行任何网络搜索或页面验证。
+    (最终版) 调用Gemini分析图片，并返回结构化数据。
     """
-    print("\n--- (极简版) 开始Gemini图片分析 ---")
+    print("\n--- (最终版) 开始Gemini图片分析 ---")
     
-    # 依然使用 gemini-1.5-flash 模型以保证速度
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    
-    # Prompt保持不变，因为我们仍然希望Gemini返回同样格式的数据
+    # Prompt也完全相同
     prompt_parts = [
         "You are a professional luxury goods authenticator and data analyst. "
         "Analyze the following images of a product and provide two things in your response in Japanese:\n"
@@ -36,6 +41,8 @@ def analyze_images_only(image_paths: list[str]) -> dict:
     image_parts = []
     for path in image_paths:
         try:
+            # 在Python 3.9+中，可以直接读取文件为PIL Image对象，新库更推荐这种方式
+            # 但为了保持简单，我们继续使用原来的字节流方式，它同样兼容
             with open(path, 'rb') as f:
                 image_parts.append({'mime_type': 'image/jpeg', 'data': f.read()})
             print(f"   - 图像 '{path}' 已加载。")
@@ -50,7 +57,20 @@ def analyze_images_only(image_paths: list[str]) -> dict:
     final_prompt = prompt_parts + image_parts
     
     try:
-        response = model.generate_content(final_prompt)
+        response = client.models.generate_content(
+            model='gemini-2.5-pro',
+            contents=[
+                # types.Part.from_bytes(
+                #     data=image_bytes,
+                #     mime_type='image/jpeg',
+                # ),
+                final_prompt,
+            ],
+            config=GenerateContentConfig(
+                tools=[google_search_tool],
+                temperature=0.0,
+            )
+        )
         text_response = response.text
         json_match = re.search(r'\{.*\}', text_response, re.DOTALL)
         

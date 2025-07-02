@@ -39,6 +39,7 @@ def analyze_images_only(image_paths: list[str]) -> dict:
     ]
     
     image_parts = []
+    my_file = client.files.upload(file=image_paths[0])  # 假设只分析第一张图片
     for path in image_paths:
         try:
             # 在Python 3.9+中，可以直接读取文件为PIL Image对象，新库更推荐这种方式
@@ -59,12 +60,11 @@ def analyze_images_only(image_paths: list[str]) -> dict:
     try:
         response = client.models.generate_content(
             model='gemini-2.5-pro',
-            contents=
+            contents=[my_file,final_prompt],
                 # types.Part.from_bytes(
                 #     data=image_bytes,
                 #     mime_type='image/jpeg',
                 # ),
-                final_prompt,
             config=GenerateContentConfig(
                 tools=[google_search_tool],
                 temperature=0.0,

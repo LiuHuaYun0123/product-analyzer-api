@@ -1,0 +1,26 @@
+# ==================================
+# 以下是新添加的规则
+myenv/
+# 忽略所有图片文件
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# 忽略所有CSV, JSON, JSONL 数据文件
+*.csv
+*.json
+*.jsonl
+
+# 忽略包含输出结果或抓取数据的文件夹
+# (请根据您自己的文件夹名字确认，以下是一些例子)
+expanded_parts/
+images_scraper/
+scraped_images_from_houbidou/
+output_texts/
+deploy/
+
+# 忽略其他无关的脚本和文件
+LearningToRank.ipynb
+*.sql
+*.txt

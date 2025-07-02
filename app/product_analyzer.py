@@ -60,7 +60,7 @@ def analyze_images_only(image_paths: list[str]) -> dict:
     try:
         response = client.models.generate_content(
             model='gemini-2.5-pro',
-            contents=[my_file,final_prompt],
+            contents=[my_file,prompt_parts],
                 # types.Part.from_bytes(
                 #     data=image_bytes,
                 #     mime_type='image/jpeg',

@@ -21,7 +21,7 @@ app = FastAPI(
 #    这是解决 "Failed to fetch" 问题的关键
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 允许来自任何来源的访问
+    allow_origins=["https://vite-react-chi-navy-65.vercel.app/"],  # 允许来自任何来源的访问
     allow_credentials=True,
     allow_methods=["*"],  # 允许所有HTTP方法 (GET, POST, etc.)
     allow_headers=["*"],  # 允许所有HTTP请求头

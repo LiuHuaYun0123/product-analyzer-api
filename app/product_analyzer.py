@@ -59,13 +59,12 @@ def analyze_images_only(image_paths: list[str]) -> dict:
     try:
         response = client.models.generate_content(
             model='gemini-2.5-pro',
-            contents=[
+            contents=
                 # types.Part.from_bytes(
                 #     data=image_bytes,
                 #     mime_type='image/jpeg',
                 # ),
                 final_prompt,
-            ],
             config=GenerateContentConfig(
                 tools=[google_search_tool],
                 temperature=0.0,

@@ -1,5 +1,3 @@
-import requests
-from bs4 import BeautifulSoup
 import os
 import io
 import time
@@ -88,57 +86,46 @@ def _find_candidate_urls(query: str, num_results: int = 10) -> list[str]:
         print(f"❌ Google検索中にエラーが発生しました: {e}")
         return []
 
-# 这是全新的、轻量化的验证函数
 def _verify_page_is_product_page(url: str, required_info: dict) -> bool:
-    """
-    (轻量版) 使用requests和BeautifulSoup访问URL，只验证核心关键词。
-    """
-    print(f"   [検証中] -> (軽量版) サイトを訪問して内容を確認: {url}")
-
-    # 伪装成浏览器，防止被一些网站屏蔽
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-
+    """(内部関数) URLを訪問し、ECサイトかどうかを最终検証する。"""
+    print(f"   [検証中] -> サイトを訪問して内容を確認: {url}")
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox') # 在Docker等沙盒环境中运行所必需的选项
+    options.add_argument('--disable-dev-shm-usage') # 解决一些Docker环境中的资源限制问题
+    options.add_argument('--log-level=3')
+    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+    options.page_load_strategy = 'eager'
+    
+    driver = None # 预先定义driver变量
     try:
-        # 发送HTTP请求，设置15秒超时
-        response = requests.get(url, headers=headers, timeout=15)
-        # 如果请求不成功（比如404 Not Found），则直接判定为失败
-        if response.status_code != 200:
-            print(f"     -> ❌ 確認失敗: HTTPステータスコードが {response.status_code} でした。")
-            return False
-
-        # 使用BeautifulSoup解析HTML内容
-        soup = BeautifulSoup(response.text, 'html.parser')
-        body_text = soup.get_text().lower()
-
-        # 我们只检查核心关键词，因为电商信号可能由JS加载，我们看不到
-        required_keywords = [
-            required_info.get('brand','').lower(), 
-            required_info.get('product_name','').lower().split()[0]
-        ]
+        service = ChromeService(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
+        
+        driver.get(url)
+        time.sleep(4)
+        body_text = driver.find_element("tag name", "body").text.lower()
+        
+        ecommerce_signals = ['カート', 'cart', '購入', 'buy', '価格', 'price', '在庫', 'stock', '円', 'yen', '$', 'usd', 'add to bag']
+        found_signals_count = sum(1 for signal in ecommerce_signals if signal in body_text)
+        
+        required_keywords = [required_info.get('brand','').lower(), required_info.get('product_name','').lower().split()[0]]
         required_keywords.extend([f.lower() for f in required_info.get('features', [])])
         required_keywords = [kw for kw in required_keywords if kw]
-
-        # 检查所有必需的关键词是否都出现在页面文本中
-        # （这里使用 all，比之前的 any 更严格，以弥补没有电商信号检查的不足）
-        found_all_required = all(keyword in body_text for keyword in required_keywords)
-
-        if found_all_required:
-            print(f"     -> ✔️ 確認完了: (軽量版) このページは関連性が高いページです。")
+        found_required = any(keyword in body_text for keyword in required_keywords)
+        
+        if found_signals_count >= 2 and found_required:
+            print(f"     -> ✔ 確認完了: このページは商品ページです。")
             return True
         else:
-            print(f"     -> ❌ 確認失敗: (軽量版) 必須キーワードが不足しています。")
+            print(f"     -> ❌ 確認失敗: ECシグナル({found_signals_count}個)または必須キーワードが不足しています。")
             return False
-
-    except requests.exceptions.RequestException as e:
-        # 处理网络请求相关的各种异常
-        print(f"     -> ❌ 検証中にネットワークエラーが発生しました: {e}")
-        return False
     except Exception as e:
-        # 处理其他未知异常
-        print(f"     -> ❌ 検証中に未知のエラーが発生しました: {e}")
+        print(f"     -> ❌ 検証中にエラーが発生しました: {e}")
         return False
+    finally:
+        if driver:
+            driver.quit()
 
 def find_and_verify_product_urls(image_paths: list[str], max_results: int = 3) -> list[str]:
     """

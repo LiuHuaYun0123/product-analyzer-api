@@ -81,6 +81,7 @@ def analyze_images_only(image_paths: list[str]) -> dict:
         structured_data = json.loads(json_string)
         
         print(f"   - Gemini分析完成。")
+        print(f"   - 解析到的结构化数据: {structured_data}")
         return structured_data
 
     except Exception as e:

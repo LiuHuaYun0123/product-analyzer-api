@@ -38,29 +38,25 @@ def analyze_images_only(image_paths: list[str]) -> dict:
         "Images to analyze:\n"
     ]
     
-    image_parts = []
+    my_file = []
     my_file = client.files.upload(file=image_paths[0])  # 假设只分析第一张图片
     for path in image_paths:
         try:
-            # 在Python 3.9+中，可以直接读取文件为PIL Image对象，新库更推荐这种方式
-            # 但为了保持简单，我们继续使用原来的字节流方式，它同样兼容
-            with open(path, 'rb') as f:
-                image_parts.append({'mime_type': 'image/jpeg', 'data': f.read()})
+            my_file_object = client.files.upload(file=path)
+            my_file.append(my_file_object)
             print(f"   - 图像 '{path}' 已加载。")
         except Exception as e:
             print(f"警告: 无法加载图片 '{path}': {e}")
             continue
             
-    if not image_parts:
+    if not my_file:
         print("错误：没有有效的图片可供分析。")
         return None
-    
-    final_prompt = prompt_parts + image_parts
     
     try:
         response = client.models.generate_content(
             model='gemini-2.5-pro',
-            contents=[my_file,prompt_parts],
+            contents= my_file + [prompt_parts],
                 # types.Part.from_bytes(
                 #     data=image_bytes,
                 #     mime_type='image/jpeg',

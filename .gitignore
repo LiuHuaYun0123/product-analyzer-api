@@ -23,4 +23,3 @@ deploy/
 # 忽略其他无关的脚本和文件
 LearningToRank.ipynb
 *.sql
-*.txt

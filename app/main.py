@@ -1,4 +1,4 @@
-# app/main.py (极简版)
+# app/main.py (最终、最强、带CORS的版本)
 
 import os
 import shutil
@@ -6,20 +6,33 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from typing import List
 import uuid
 from fastapi.concurrency import run_in_threadpool
+# 1. 导入我们需要的CORS中间件
+from fastapi.middleware.cors import CORSMiddleware
 
-# 只导入我们唯一需要的分析函数
+# 导入我们的分析函数
 from .product_analyzer import analyze_images_only
 
-app = FastAPI(title="商品图片分析API (极简版)", description="只接收图片，返回Gemini的分析结果")
+app = FastAPI(
+    title="商品图片分析API (最终版)", 
+    description="使用最新的 google-generativeai 库并已启用CORS"
+)
+
+# 2. 添加CORS中间件配置
+#    这是解决 "Failed to fetch" 问题的关键
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 允许来自任何来源的访问
+    allow_credentials=True,
+    allow_methods=["*"],  # 允许所有HTTP方法 (GET, POST, etc.)
+    allow_headers=["*"],  # 允许所有HTTP请求头
+)
+
 
 TEMP_IMAGE_DIR = "temp_images"
 os.makedirs(TEMP_IMAGE_DIR, exist_ok=True)
 
 @app.post("/analyze/", tags=["Image Analysis"])
 async def analyze_endpoint(images: List[UploadFile] = File(...)):
-    """
-    接收上传的商品图片，执行Gemini分析并直接返回结果。
-    """
     if not images:
         raise HTTPException(status_code=400, detail="没有提供任何图片文件。")
 
@@ -35,13 +48,11 @@ async def analyze_endpoint(images: List[UploadFile] = File(...)):
                 shutil.copyfileobj(image.file, buffer)
             image_paths.append(file_path)
 
-        # 在线程池中运行我们的极简版分析函数
         analysis_result = await run_in_threadpool(analyze_images_only, image_paths)
         
         if not analysis_result:
             raise HTTPException(status_code=500, detail="图片分析失败，无法从Gemini获取有效数据。")
 
-        # 直接返回成功的结果
         return {
             "message": "图片分析成功",
             "product_data": analysis_result
@@ -55,4 +66,4 @@ async def analyze_endpoint(images: List[UploadFile] = File(...)):
 
 @app.get("/", tags=["Health Check"])
 def read_root():
-    return {"status": "ok", "message": "欢迎使用极简版商品图片分析API"}
+    return {"status": "ok", "message": "欢迎使用最终版商品图片分析API"}

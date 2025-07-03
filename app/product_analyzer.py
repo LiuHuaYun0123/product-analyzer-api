@@ -7,7 +7,7 @@ import re
 # API密钥配置保持不变
 API_KEY = "AIzaSyBeRAJv-EkYme20nOnmjYkSm9CnW5Z0mao"
 if not API_KEY or API_KEY == "YOUR_GEMINI_API_KEY_HERE":
-    print("错误：请先设置您的Gemini API密钥。")
+    print("先にGemini APIキーを設定してください。")
     exit()
 client = genai.Client(api_key=API_KEY)
 google_search_tool = Tool(
@@ -23,9 +23,9 @@ my_generation_config = GenerateContentConfig(
 )
 def analyze_images_only(image_paths: list[str]) -> dict:
     """
-    (最终版) 调用Gemini分析图片，并返回结构化数据。
+    （最終版）Geminiを使用して画像を解析し、構造化データを返します。
     """
-    print("\n--- (最终版) 开始Gemini图片分析 ---")
+    print("\n--- （最終版）Gemini画像解析を開始します ---")
     
     # Prompt也完全相同
     prompt_parts = [
@@ -44,13 +44,13 @@ def analyze_images_only(image_paths: list[str]) -> dict:
         try:
             my_file_object = client.files.upload(file=path)
             my_file.append(my_file_object)
-            print(f"   - 图像 '{path}' 已加载。")
+            print(f"   - 画像「{path}」を読み込みました。")
         except Exception as e:
-            print(f"警告: 无法加载图片 '{path}': {e}")
+            print(f"警告：画像「{path}」を読み込めませんでした：{e}")
             continue
             
     if not my_file:
-        print("错误：没有有效的图片可供分析。")
+        print("エラー：解析可能な有効な画像が見つかりませんでした。")
         return None
     
     try:
@@ -70,16 +70,16 @@ def analyze_images_only(image_paths: list[str]) -> dict:
         json_match = re.search(r'\{.*\}', text_response, re.DOTALL)
         
         if not json_match:
-            print("❌ Gemini返回的内容中未找到有效的JSON对象。")
+            print("❌ Geminiの応答に有効なJSONオブジェクトが見つかりませんでした。")
             return None
         
         json_string = json_match.group(0)
         structured_data = json.loads(json_string)
         
-        print(f"   - Gemini分析完成。")
-        print(f"   - 解析到的结构化数据: {structured_data}")
+        print(f"   - Geminiによる解析が完了しました。")
+        print(f"   - 解析された構造化データ: {structured_data}")
         return structured_data
 
     except Exception as e:
-        print(f"❌ Gemini API处理过程中发生错误: {e}")
+        print(f"❌ Gemini APIの処理中にエラーが発生しました: {e}")
         return None

@@ -13,8 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .product_analyzer import analyze_images_only
 
 app = FastAPI(
-    title="商品图片分析API (最终版)", 
-    description="使用最新的 google-generativeai 库并已启用CORS"
+    title="商品画像解析API（最終版）", 
+    description="最新の google-generativeai ライブラリを使用し、CORSを有効化しています。"
 )
 
 # 2. 添加CORS中间件配置
@@ -34,7 +34,7 @@ os.makedirs(TEMP_IMAGE_DIR, exist_ok=True)
 @app.post("/analyze/", tags=["Image Analysis"])
 async def analyze_endpoint(images: List[UploadFile] = File(...)):
     if not images:
-        raise HTTPException(status_code=400, detail="没有提供任何图片文件。")
+        raise HTTPException(status_code=400, detail="画像ファイルをご提供ください。")
 
     request_id = str(uuid.uuid4())
     request_dir = os.path.join(TEMP_IMAGE_DIR, request_id)
@@ -51,19 +51,19 @@ async def analyze_endpoint(images: List[UploadFile] = File(...)):
         analysis_result = await run_in_threadpool(analyze_images_only, image_paths)
         
         if not analysis_result:
-            raise HTTPException(status_code=500, detail="图片分析失败，无法从Gemini获取有效数据。")
+            raise HTTPException(status_code=500, detail="画像解析に失敗しました。Geminiから有効なデータを取得できませんでした。")
 
         return {
-            "message": "图片分析成功",
+            "message": "画像解析に成功しました。",
             "product_data": analysis_result
         }
     except Exception as e:
-        print(f"一个未处理的错误发生: {e}")
-        raise HTTPException(status_code=500, detail=f"处理过程中发生未知错误: {str(e)}")
+        print(f"未処理のエラーが発生しました: {e}")
+        raise HTTPException(status_code=500, detail=f"処理中に予期しないエラーが発生しました: {str(e)}")
     finally:
         if os.path.exists(request_dir):
             shutil.rmtree(request_dir)
 
 @app.get("/", tags=["Health Check"])
 def read_root():
-    return {"status": "ok", "message": "欢迎使用最终版商品图片分析API"}
+    return {"status": "ok", "message": "最終版商品画像解析APIへようこそ"}

@@ -31,9 +31,12 @@ def analyze_images_only(image_paths: list[str]) -> dict:
     prompt_parts = [
         "You are a professional luxury goods authenticator and data analyst. "
         "Analyze the following images of a product and provide two things in your response in Japanese:\n"
-        "1. A detailed one-paragraph description of the product, including brand, product name/line, material, color, and key features.\n"
-        "2. A JSON object containing the key attributes. The keys for the JSON object must be: 'brand', 'product_name', 'material', 'color', 'features' (as a list of strings).\n"
-        "Example JSON: {\"brand\": \"グッチ\", \"product_name\": \"GGリボン ハーバリウム トートバッグ\", \"material\": \"GGスプリーム キャンバス\", \"color\": \"ベージュ/エボニー/ピンク\", \"features\": [\"日本限定\", \"花柄\", \"レザートリム\"]}\n"
+        # --- 変更点1：説明文にも品番/型番の要求を追加 ---
+        "1. A detailed one-paragraph description of the product, including brand, product name/line, model number (品番/型番 if available), material, color, and key features.\n"
+        # --- 変更点2：JSONオブジェクトのキーに`model_number`を追加 ---
+        "2. A JSON object containing the key attributes. The keys for the JSON object must be: 'brand', 'product_name', 'model_number', 'material', 'color', 'features' (as a list of strings).\n"
+        # --- 変更点3：JSONの例にも`model_number`を追加 ---
+        "Example JSON: {\"brand\": \"グッチ\", \"product_name\": \"GGリボン ハーバリウム トートバッグ\", \"model_number\": \"415721 KLQHG 8526\", \"material\": \"GGスプリーム キャンバス\", \"color\": \"ベージュ/エボニー/ピンク\", \"features\": [\"日本限定\", \"花柄\", \"レザートリム\"]}\n"
         "Provide only the description paragraph and the JSON object, with nothing else before or after.\n\n"
         "Images to analyze:\n"
     ]

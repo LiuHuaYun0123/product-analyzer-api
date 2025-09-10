@@ -10,7 +10,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 
 # 导入我们的分析函数
-from .product_analyzer import analyze_images_only
+from product_analyzer import analyze_images_only
 
 app = FastAPI(
     title="商品画像解析API（最終版）", 

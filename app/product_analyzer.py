@@ -4,45 +4,45 @@ from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 import json
 import re
 
-# API密钥配置保持不变
+# Gemini APIへのアクセスに必要なAPIキーを設定
 API_KEY = "AIzaSyBeRAJv-EkYme20nOnmjYkSm9CnW5Z0mao"
 if not API_KEY or API_KEY == "YOUR_GEMINI_API_KEY_HERE":
     print("先にGemini APIキーを設定してください。")
     exit()
-client = genai.Client(api_key=API_KEY)
+    # APIキーを使ってGeminiクライアントを作成
+    client = genai.Client(api_key=API_KEY)
+
+# Google検索ツールを設定し、ツールとして追加
 google_search_tool = Tool(
     google_search = GoogleSearch()
 )
 
+# 画像分析後、Google Gemini APIを使用して生成されるテキストの設定
 my_generation_config = GenerateContentConfig(
     temperature=0.0,
     top_p=1.0,
     top_k=32,
     max_output_tokens=4096,
-    stop_sequences=['}'] # 这是一个可选的高级技巧
+    stop_sequences=['}']
 )
+# Geminiを使用して画像を解析
 def analyze_images_only(image_paths: list[str]) -> dict:
     """
     （最終版）Geminiを使用して画像を解析し、構造化データを返します。
     """
     print("\n--- （最終版）Gemini画像解析を開始します ---")
-    
-    # Prompt也完全相同
     prompt_parts = [
         "You are a professional luxury goods authenticator and data analyst. "
         "Analyze the following images of a product and provide two things in your response in Japanese:\n"
-        # --- 変更点1：説明文にも品番/型番の要求を追加 ---
         "1. A detailed one-paragraph description of the product, including brand, product name/line, model number (品番/型番 if available), material, color, and key features.\n"
-        # --- 変更点2：JSONオブジェクトのキーに`model_number`を追加 ---
         "2. A JSON object containing the key attributes. The keys for the JSON object must be: 'brand', 'product_name', 'model_number', 'material', 'color', 'features' (as a list of strings).\n"
-        # --- 変更点3：JSONの例にも`model_number`を追加 ---
         "Example JSON: {\"brand\": \"グッチ\", \"product_name\": \"GGリボン ハーバリウム トートバッグ\", \"model_number\": \"415721 KLQHG 8526\", \"material\": \"GGスプリーム キャンバス\", \"color\": \"ベージュ/エボニー/ピンク\", \"features\": [\"日本限定\", \"花柄\", \"レザートリム\"]}\n"
         "Provide only the description paragraph and the JSON object, with nothing else before or after.\n\n"
         "Images to analyze:\n"
     ]
     
     my_file = []
-    # my_file = client.files.upload(file=image_paths[0])  # 假设只分析第一张图片
+    # my_file = client.files.upload(file=image_paths[0])
     for path in image_paths:
         try:
             my_file_object = client.files.upload(file=path)
